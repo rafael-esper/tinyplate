@@ -10,15 +10,91 @@ Generate complete favicon sets for Next.js projects.
 
 ## Workflow
 
-### Step 1: Gather Information
+### Step 1: Auto-Detect App Information
 
-Ask the user:
-1. **App name** - e.g., "Striggo", "TaskFlow"
-2. **App description** - What does the app do?
-3. **Brand colors** (optional) - Primary color for the icon
-4. **Source type** - Do they have an existing image or need one generated?
+**IMPORTANT:** Before asking the user anything, scan the codebase to extract:
 
-### Step 2: Choose Generation Method
+```bash
+# Check these files in order:
+```
+
+#### 1. Package.json
+```typescript
+// Read package.json for name and description
+{
+  "name": "my-app",           // App name
+  "description": "..."        // App description
+}
+```
+
+#### 2. Next.js Metadata (app/layout.tsx)
+```typescript
+// Look for metadata export
+export const metadata: Metadata = {
+  title: "App Title",         // App name
+  description: "...",         // App description
+};
+
+// Or metadataBase, applicationName
+```
+
+#### 3. README.md
+```markdown
+# App Name              <- Extract from H1
+Description paragraph   <- Extract first paragraph
+```
+
+#### 4. Tailwind Config (tailwind.config.ts)
+```typescript
+// Look for custom colors in theme.extend.colors
+theme: {
+  extend: {
+    colors: {
+      primary: "#6366f1",    // Brand color
+      brand: { ... }
+    }
+  }
+}
+```
+
+#### 5. CSS Variables (app/globals.css)
+```css
+:root {
+  --primary: #6366f1;        /* Brand color */
+  --brand-color: ...;
+}
+```
+
+#### 6. Existing Favicon/Icons
+```bash
+# Check if icons already exist
+public/favicon.ico
+public/apple-touch-icon.png
+app/icon.tsx
+app/icon.png
+```
+
+### Step 2: Present Findings & Confirm
+
+After scanning, present what was found:
+
+```
+I found the following from your codebase:
+
+App name: Striggo
+Description: A study platform for professional certification exams
+Brand color: #8b5cf6 (from Tailwind config)
+Existing icons: None found
+
+Should I generate a favicon based on this? Or would you like to customize?
+```
+
+Only ask questions if:
+- App name is missing or unclear
+- No brand colors found (suggest based on app type)
+- User wants to override detected values
+
+### Step 3: Choose Generation Method
 
 Based on user input, choose one of these approaches:
 
@@ -352,31 +428,48 @@ export const metadata: Metadata = {
 };
 ```
 
-## Interactive Prompts Template
+## Interactive Flow
 
-When running `/favicon`, ask:
+When running `/favicon`:
 
+### 1. First, scan the codebase (silently):
+```bash
+# Read these files
+cat package.json
+cat app/layout.tsx
+cat README.md
+cat tailwind.config.ts
+cat app/globals.css
+ls public/favicon* app/icon* 2>/dev/null
 ```
-What's your app name?
-> Striggo
 
-Briefly describe what your app does:
-> A study platform for professional certification exams
+### 2. Present findings:
+```
+I scanned your codebase and found:
 
-Do you have a source image, or should I generate one?
-> Generate one
+  App name:     Striggo
+  Description:  A study platform for professional certification exams
+  Brand color:  #8b5cf6 (from tailwind.config.ts)
+  Existing icons: None
 
-What's your primary brand color? (hex or name, or skip for suggestion)
-> purple
+I'll generate a favicon with:
+- Letter "S" on purple gradient background
+- Professional style (matching education/learning apps)
 
-Any preference for icon style?
-1. Letter/initials (professional)
-2. Emoji (fun/casual)
-3. Geometric shape (technical)
+Proceed with this? Or customize (name/color/style)?
+```
+
+### 3. If info is missing, ask only what's needed:
+```
+I couldn't detect a brand color. What color should I use?
+1. Purple (education/learning)
+2. Blue (trust/professional)
+3. Green (growth/success)
+4. Custom hex code
 > 1
 ```
 
-Then generate:
+### 4. Generate:
 - `app/icon.tsx` - Dynamic 32x32 favicon
 - `app/apple-icon.tsx` - Dynamic 180x180 Apple icon
 - `app/manifest.ts` - PWA manifest
